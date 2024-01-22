@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+/// 用户信息模型
+model User {
+  /// 用户ID
+  id Int @id @default(autoincrement())
+
+  /// 创建时间 
+  createdAt DateTime @default(now())
+
+  /// 更新时间
+  updatedAt DateTime @updatedAt
+
+  /// 用户名称,唯一键
+  username String @unique
+
+  /// 用户密码哈希 
+  passwordHash String
+
+  /// 电话号码  
+  phone String
+
+  /// 用户角色 
+  role Role @default(USER)
+
+  /// 额外的用户信息
+  moreInfo Json
+  Order    Order[]
+}
+
+/// 用户角色枚举
+
+// schema.prisma
+// model User {
+//   id        Int      @id @default(autoincrement())
+//   createdAt DateTime @default(now())
+//   username  String   @unique
+//   password  String
+//   phone     String
+//   Order     Order[]
+
+//   @@map("users")
+// }
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  title       String // 商品名称
+  description String? // 商品描述
+  image       String? // 商品主图
+
+  price Float // 价格
+  stock Int // 库存数量
+
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+
+  // 其他规格字段
+  // 商品参数
+  // 商品评价
+  OrderItem OrderItem[]
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String // 分类名称 
+
+  products Product[] // 关联商品
+}
+
+enum OrderStatus {
+  // 订单状态 枚举
+  CREATED
+  PAID
+  DELIVERED
+  RECEIVED
+  CANCELLED
+}
+
+model Order {
+  // 订单主表 模型
+  id Int @id @default(autoincrement())
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  status OrderStatus
+
+  amount Float // 订单总金额
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  OrderItem OrderItem[]
+}
+
+model OrderItem {
+  // 订单商品从表 模型
+  id Int @id @default(autoincrement())
+
+  order   Order @relation(fields: [orderId], references: [id])
+  orderId Int
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+
+  price    Float
+  quantity Int
+
+  subtotal Float // 小计金额
+}
